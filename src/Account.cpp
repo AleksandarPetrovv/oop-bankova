@@ -1,8 +1,9 @@
 #include "Account.h"
 
+#include "TransactionObserver.h"
+
 #include <stdexcept>
 
-class TransactionObserver;
 class TransactionFilter;
 
 Account::Account(const std::string& accountId,
@@ -41,8 +42,10 @@ void Account::addObserver(std::shared_ptr<TransactionObserver> obs) {
     observers.push_back(std::move(obs));
 }
 
-void Account::notifyObservers(const Transaction& /*tx*/) {
-    // Dispatch wired up when TransactionObserver is introduced.
+void Account::notifyObservers(const Transaction& tx) {
+    for (auto& obs : observers) {
+        if (obs) obs->onTransaction(tx);
+    }
 }
 
 void Account::recordTransaction(const Transaction& tx) {
