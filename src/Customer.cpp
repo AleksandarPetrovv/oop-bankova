@@ -1,5 +1,9 @@
 #include "Customer.h"
 
+#include "Account.h"
+
+#include <algorithm>
+
 Customer::Customer(const std::string& customerId,
                    const std::string& name,
                    const std::string& email,
@@ -18,8 +22,11 @@ void Customer::addAccount(std::shared_ptr<Account> account) {
     accounts.push_back(std::move(account));
 }
 
-void Customer::removeAccount(const std::string& /*accountId*/) {
-    // Lookup-by-id added once the Account interface lands in the next commit.
+void Customer::removeAccount(const std::string& accountId) {
+    accounts.erase(
+        std::remove_if(accounts.begin(), accounts.end(),
+            [&](const std::shared_ptr<Account>& a) { return a->getAccountId() == accountId; }),
+        accounts.end());
 }
 
 const std::vector<std::shared_ptr<Account>>& Customer::getAccounts() const {
