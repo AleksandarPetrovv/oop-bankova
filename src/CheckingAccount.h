@@ -16,6 +16,7 @@ public:
                     double monthlyFee);
 
     bool withdraw(double amount, const std::string& description = "Withdrawal") override;
+    bool transferOut(double amount, Account* dest, const std::string& description) override;
     void chargeMonthlyFee();
     double getAvailableBalance() const;
 

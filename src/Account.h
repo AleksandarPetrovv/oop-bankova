@@ -36,6 +36,9 @@ public:
     virtual void deposit(double amount, const std::string& description = "Deposit");
     virtual bool withdraw(double amount, const std::string& description = "Withdrawal") = 0;
 
+    virtual bool transferOut(double amount, Account* dest, const std::string& description);
+    virtual void transferIn(double amount, Account* src, const std::string& description);
+
     double getBalance() const;
     std::string getAccountId() const;
     std::string getCurrency() const;

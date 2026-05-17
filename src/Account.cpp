@@ -51,3 +51,18 @@ void Account::recordTransaction(const Transaction& tx) {
 }
 
 void Account::adjustBalance(double delta) { balance += delta; }
+
+bool Account::transferOut(double amount, Account* dest, const std::string& description) {
+    if (amount <= 0 || amount > getBalance()) return false;
+    adjustBalance(-amount);
+    Transaction tx(Transaction::nextId("TXO"), TransactionType::TRANSFER_OUT, amount, description, dest);
+    recordTransaction(tx);
+    return true;
+}
+
+void Account::transferIn(double amount, Account* src, const std::string& description) {
+    if (amount <= 0) return;
+    adjustBalance(amount);
+    Transaction tx(Transaction::nextId("TXI"), TransactionType::TRANSFER_IN, amount, description, src);
+    recordTransaction(tx);
+}

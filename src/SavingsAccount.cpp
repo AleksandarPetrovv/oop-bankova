@@ -33,6 +33,23 @@ bool SavingsAccount::withdraw(double amount, const std::string& description) {
     return true;
 }
 
+bool SavingsAccount::transferOut(double amount, Account* dest, const std::string& description) {
+    if (amount <= 0) return false;
+    if (withdrawalsThisMonth >= monthlyWithdrawLimit) {
+        std::cout << "Monthly withdrawal limit reached (" << monthlyWithdrawLimit << ").\n";
+        return false;
+    }
+    if (amount > getBalance()) {
+        std::cout << "Insufficient funds in savings account.\n";
+        return false;
+    }
+    adjustBalance(-amount);
+    ++withdrawalsThisMonth;
+    Transaction tx(Transaction::nextId("TXO"), TransactionType::TRANSFER_OUT, amount, description, dest);
+    recordTransaction(tx);
+    return true;
+}
+
 void SavingsAccount::applyInterest() {
     double interest = getBalance() * interestRate;
     if (interest <= 0) return;

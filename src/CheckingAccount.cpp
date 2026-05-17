@@ -27,6 +27,18 @@ bool CheckingAccount::withdraw(double amount, const std::string& description) {
     return true;
 }
 
+bool CheckingAccount::transferOut(double amount, Account* dest, const std::string& description) {
+    if (amount <= 0) return false;
+    if (amount > getBalance() + overdraftLimit) {
+        std::cout << "Transfer exceeds overdraft limit.\n";
+        return false;
+    }
+    adjustBalance(-amount);
+    Transaction tx(Transaction::nextId("TXO"), TransactionType::TRANSFER_OUT, amount, description, dest);
+    recordTransaction(tx);
+    return true;
+}
+
 void CheckingAccount::chargeMonthlyFee() {
     if (monthlyFee <= 0) return;
     adjustBalance(-monthlyFee);
