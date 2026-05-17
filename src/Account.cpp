@@ -1,10 +1,9 @@
 #include "Account.h"
 
 #include "TransactionObserver.h"
+#include "TransactionFilter.h"
 
 #include <stdexcept>
-
-class TransactionFilter;
 
 Account::Account(const std::string& accountId,
                  const std::string& currency,
@@ -31,9 +30,12 @@ std::string Account::getCurrency() const { return currency; }
 Customer* Account::getOwner() const { return owner; }
 std::time_t Account::getCreatedAt() const { return createdAt; }
 
-std::vector<Transaction> Account::getTransactionHistory(const TransactionFilter& /*filter*/) const {
-    // TransactionFilter integration arrives with the filter/statement commit.
-    return transactions;
+std::vector<Transaction> Account::getTransactionHistory(const TransactionFilter& filter) const {
+    std::vector<Transaction> out;
+    for (const auto& tx : transactions) {
+        if (filter.matches(tx)) out.push_back(tx);
+    }
+    return out;
 }
 
 const std::vector<Transaction>& Account::getAllTransactions() const { return transactions; }
