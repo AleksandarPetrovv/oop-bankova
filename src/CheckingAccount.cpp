@@ -50,4 +50,7 @@ double CheckingAccount::getAvailableBalance() const { return getBalance() + over
 double CheckingAccount::getOverdraftLimit() const { return overdraftLimit; }
 double CheckingAccount::getMonthlyFee() const { return monthlyFee; }
 
+void CheckingAccount::setOverdraftLimit(double limit) { overdraftLimit = limit; }
+void CheckingAccount::setMonthlyFee(double fee) { monthlyFee = fee; }
+
 std::string CheckingAccount::getType() const { return "CHECKING"; }

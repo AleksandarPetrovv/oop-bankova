@@ -64,4 +64,7 @@ double SavingsAccount::getInterestRate() const { return interestRate; }
 int SavingsAccount::getMonthlyWithdrawLimit() const { return monthlyWithdrawLimit; }
 int SavingsAccount::getWithdrawalsThisMonth() const { return withdrawalsThisMonth; }
 
+void SavingsAccount::setInterestRate(double rate) { interestRate = rate; }
+void SavingsAccount::setMonthlyWithdrawLimit(int limit) { monthlyWithdrawLimit = limit; }
+
 std::string SavingsAccount::getType() const { return "SAVINGS"; }

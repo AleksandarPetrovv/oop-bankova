@@ -11,9 +11,12 @@ class Customer;
 class TransactionObserver;
 class TransactionFilter;
 
+enum class AccountStatus { ACTIVE, CLOSED };
+
 class Account {
 private:
     double balance;
+    AccountStatus status;
 
 protected:
     std::string accountId;
@@ -38,6 +41,10 @@ public:
 
     virtual bool transferOut(double amount, Account* dest, const std::string& description);
     virtual void transferIn(double amount, Account* src, const std::string& description);
+
+    void close();
+    bool isActive() const;
+    AccountStatus getStatus() const;
 
     double getBalance() const;
     std::string getAccountId() const;

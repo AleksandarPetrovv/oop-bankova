@@ -25,5 +25,8 @@ public:
     int getMonthlyWithdrawLimit() const;
     int getWithdrawalsThisMonth() const;
 
+    void setInterestRate(double rate);
+    void setMonthlyWithdrawLimit(int limit);
+
     std::string getType() const override;
 };

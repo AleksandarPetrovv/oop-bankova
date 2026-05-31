@@ -10,10 +10,15 @@ Account::Account(const std::string& accountId,
                  Customer* owner,
                  double initialBalance)
     : balance(initialBalance),
+      status(AccountStatus::ACTIVE),
       accountId(accountId),
       currency(currency),
       owner(owner),
       createdAt(std::time(nullptr)) {}
+
+void Account::close() { status = AccountStatus::CLOSED; }
+bool Account::isActive() const { return status == AccountStatus::ACTIVE; }
+AccountStatus Account::getStatus() const { return status; }
 
 void Account::deposit(double amount, const std::string& description) {
     if (amount <= 0) {

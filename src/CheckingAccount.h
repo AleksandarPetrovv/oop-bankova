@@ -23,5 +23,8 @@ public:
     double getOverdraftLimit() const;
     double getMonthlyFee() const;
 
+    void setOverdraftLimit(double limit);
+    void setMonthlyFee(double fee);
+
     std::string getType() const override;
 };
