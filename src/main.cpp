@@ -548,6 +548,15 @@ void seedDemoData() {
                                         "+1-555-0100", "1 Demo Lane");
     auto s = std::make_shared<SavingsAccount>("A0001", "USD", c.get(), 1000.0, 0.03, 3);
     auto k = std::make_shared<CheckingAccount>("A0002", "USD", c.get(), 500.0, 200.0, 5.0);
+
+    // Seed sample transactions before observers attach so startup is silent
+    s->deposit(500.0, "Initial funding");
+    s->deposit(200.0, "Paycheck deposit");
+    s->withdraw(150.0, "Grocery shopping");
+    k->deposit(300.0, "Cash deposit at branch");
+    Transfer seedXfer(s.get(), k.get(), 100.0, "Demo transfer");
+    seedXfer.execute();
+
     s->addObserver(std::make_shared<EmailNotifier>(c->getEmail()));
     s->addObserver(std::make_shared<SmsNotifier>(c->getPhone()));
     k->addObserver(std::make_shared<EmailNotifier>(c->getEmail()));
