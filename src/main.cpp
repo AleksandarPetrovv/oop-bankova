@@ -31,6 +31,14 @@ std::string readLine(const std::string& prompt) {
     return s;
 }
 
+std::string readRequiredLine(const std::string& prompt) {
+    while (true) {
+        std::string s = readLine(prompt);
+        if (!s.empty()) return s;
+        std::cout << "This field is required.\n";
+    }
+}
+
 int readInt(const std::string& prompt) {
     while (true) {
         std::cout << prompt;
@@ -52,6 +60,30 @@ double readDouble(const std::string& prompt) {
         double v;
         if (ss >> v) return v;
         std::cout << "Please enter a number.\n";
+    }
+}
+
+double readPositiveDouble(const std::string& prompt) {
+    while (true) {
+        double v = readDouble(prompt);
+        if (v > 0) return v;
+        std::cout << "Amount must be greater than zero.\n";
+    }
+}
+
+int readPositiveInt(const std::string& prompt) {
+    while (true) {
+        int v = readInt(prompt);
+        if (v > 0) return v;
+        std::cout << "Value must be greater than zero.\n";
+    }
+}
+
+double readNonNegativeDouble(const std::string& prompt) {
+    while (true) {
+        double v = readDouble(prompt);
+        if (v >= 0) return v;
+        std::cout << "Value must be zero or greater.\n";
     }
 }
 
@@ -98,8 +130,8 @@ void listAccountsForCustomer(const Customer& c) {
 }
 
 std::shared_ptr<Customer> createCustomer() {
-    std::string name    = readLine("Name: ");
-    std::string email   = readLine("Email: ");
+    std::string name    = readRequiredLine("Name: ");
+    std::string email   = readRequiredLine("Email: ");
     std::string phone   = readLine("Phone: ");
     std::string address = readLine("Address: ");
     std::ostringstream id;
@@ -123,20 +155,20 @@ void openAccount() {
 
     std::cout << "Type: 1) Savings  2) Checking\n";
     int t = readInt("> ");
-    double initial  = readDouble("Initial deposit: ");
-    std::string ccy = readLine("Currency (e.g. USD): ");
+    double initial  = readNonNegativeDouble("Initial deposit: ");
+    std::string ccy = readRequiredLine("Currency (e.g. USD): ");
 
     std::ostringstream id;
     id << "A" << std::setw(4) << std::setfill('0') << g_nextAccountNum++;
 
     std::shared_ptr<Account> acc;
     if (t == 1) {
-        double rate = readDouble("Interest rate (e.g. 0.03 = 3%): ");
-        int    lim  = readInt   ("Monthly withdrawal limit: ");
+        double rate = readNonNegativeDouble("Interest rate (e.g. 0.03 = 3%): ");
+        int    lim  = readPositiveInt      ("Monthly withdrawal limit: ");
         acc = std::make_shared<SavingsAccount>(id.str(), ccy, cust.get(), initial, rate, lim);
     } else if (t == 2) {
-        double overdraft = readDouble("Overdraft limit: ");
-        double fee       = readDouble("Monthly fee: ");
+        double overdraft = readNonNegativeDouble("Overdraft limit: ");
+        double fee       = readNonNegativeDouble("Monthly fee: ");
         acc = std::make_shared<CheckingAccount>(id.str(), ccy, cust.get(), initial, overdraft, fee);
     } else {
         std::cout << "Unknown type.\n";
@@ -153,7 +185,8 @@ void doDeposit() {
     std::string aid = readLine("Account id: ");
     auto acc = findAccount(aid);
     if (!acc) { std::cout << "Account not found.\n"; return; }
-    double amount = readDouble("Amount: ");
+    if (!acc->isActive()) { std::cout << "Account is closed.\n"; return; }
+    double amount = readPositiveDouble("Amount: ");
     std::string desc = readLine("Description: ");
     try {
         acc->deposit(amount, desc.empty() ? "Deposit" : desc);
@@ -167,7 +200,8 @@ void doWithdraw() {
     std::string aid = readLine("Account id: ");
     auto acc = findAccount(aid);
     if (!acc) { std::cout << "Account not found.\n"; return; }
-    double amount = readDouble("Amount: ");
+    if (!acc->isActive()) { std::cout << "Account is closed.\n"; return; }
+    double amount = readPositiveDouble("Amount: ");
     std::string desc = readLine("Description: ");
     if (acc->withdraw(amount, desc.empty() ? "Withdrawal" : desc)) {
         std::cout << "New balance: " << acc->getBalance() << "\n";
@@ -182,7 +216,8 @@ void doTransfer() {
     auto s = findAccount(src);
     auto d = findAccount(dst);
     if (!s || !d) { std::cout << "One of the accounts was not found.\n"; return; }
-    double amount = readDouble("Amount: ");
+    if (!s->isActive() || !d->isActive()) { std::cout << "One or both accounts are closed.\n"; return; }
+    double amount = readPositiveDouble("Amount: ");
     std::string desc = readLine("Description: ");
     Transfer t(s.get(), d.get(), amount, desc.empty() ? "Transfer" : desc);
     if (t.execute()) {
