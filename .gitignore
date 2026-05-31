@@ -1,4 +1,11 @@
 *.exe
 *.o
 *.obj
+*.out
 build/
+bank
+.vscode/
+.idea/
+*.log
+out.log
+build.err
