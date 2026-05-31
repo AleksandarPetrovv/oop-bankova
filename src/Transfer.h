@@ -13,6 +13,7 @@ private:
     Account* destAccount;
     double amount;
     std::string description;
+    std::string transferId;
     std::unique_ptr<Transaction> sourceTransaction;
     std::unique_ptr<Transaction> destTransaction;
 
@@ -27,6 +28,7 @@ public:
     Account* getSourceAccount() const;
     Account* getDestAccount() const;
     double getAmount() const;
+    std::string getTransferId() const;
     const Transaction* getSourceTransaction() const;
     const Transaction* getDestTransaction() const;
 };

@@ -221,7 +221,8 @@ void doTransfer() {
     std::string desc = readLine("Description: ");
     Transfer t(s.get(), d.get(), amount, desc.empty() ? "Transfer" : desc);
     if (t.execute()) {
-        std::cout << "Transfer complete. Source=" << s->getBalance()
+        std::cout << "Transfer complete [" << t.getTransferId() << "]. "
+                  << "Source=" << std::fixed << std::setprecision(2) << s->getBalance()
                   << "  Dest=" << d->getBalance() << "\n";
     } else {
         std::cout << "Transfer failed.\n";
