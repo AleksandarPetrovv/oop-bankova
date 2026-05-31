@@ -335,11 +335,26 @@ void doInterest() {
     std::string aid = readLine("Savings account id: ");
     auto acc = findAccount(aid);
     if (!acc) { std::cout << "Account not found.\n"; return; }
+    if (!acc->isActive()) { std::cout << "Account is closed.\n"; return; }
     auto* sav = dynamic_cast<SavingsAccount*>(acc.get());
     if (!sav) { std::cout << "Not a savings account.\n"; return; }
     double before = sav->getBalance();
+    double interest = before * sav->getInterestRate();
     sav->applyInterest();
-    std::cout << "Interest applied. " << before << " -> " << sav->getBalance() << "\n";
+    std::cout << "Interest applied at " << sav->getInterestRate() * 100 << "%: +"
+              << std::fixed << std::setprecision(2) << interest
+              << "  " << before << " -> " << sav->getBalance() << "\n";
+}
+
+void doResetMonthly() {
+    std::string aid = readLine("Savings account id: ");
+    auto acc = findAccount(aid);
+    if (!acc) { std::cout << "Account not found.\n"; return; }
+    auto* sav = dynamic_cast<SavingsAccount*>(acc.get());
+    if (!sav) { std::cout << "Not a savings account.\n"; return; }
+    int before = sav->getWithdrawalsThisMonth();
+    sav->resetMonthlyCounter();
+    std::cout << "Monthly withdrawal counter reset (" << before << " -> 0).\n";
 }
 
 void doStatement() {
@@ -559,8 +574,9 @@ void printMenu() {
               << "12) Balance inquiry\n"
               << "13) Transaction history (filter by type/amount/date)\n"
               << "14) Apply interest (savings)\n"
-              << "15) Charge monthly fee (checking)\n"
-              << "16) Generate statement\n"
+              << "15) Reset monthly withdrawal counter (savings)\n"
+              << "16) Charge monthly fee (checking)\n"
+              << "17) Generate statement\n"
               << " 0) Exit\n"
               << "================================\n";
 }
@@ -590,8 +606,9 @@ int main() {
             case 12: doBalance();         break;
             case 13: doHistory();         break;
             case 14: doInterest();        break;
-            case 15: doMonthlyFee();      break;
-            case 16: doStatement();       break;
+            case 15: doResetMonthly();    break;
+            case 16: doMonthlyFee();      break;
+            case 17: doStatement();       break;
             case 0:
                 std::cout << "Goodbye.\n";
                 return 0;
