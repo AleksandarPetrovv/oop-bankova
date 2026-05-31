@@ -2,13 +2,15 @@
 
 #include "Transaction.h"
 
+#include <iomanip>
 #include <iostream>
 
 SmsNotifier::SmsNotifier(const std::string& phoneNumber)
     : phoneNumber(phoneNumber) {}
 
 void SmsNotifier::onTransaction(const Transaction& tx) {
-    std::cout << "  [sms -> " << phoneNumber << "] "
+    std::cout << "  [SMS -> " << phoneNumber << "] "
               << Transaction::typeToString(tx.getType())
-              << " " << tx.getAmount() << "\n";
+              << " " << std::fixed << std::setprecision(2) << tx.getAmount()
+              << " [" << tx.getTransactionId() << "]\n";
 }
