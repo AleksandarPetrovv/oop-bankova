@@ -346,9 +346,30 @@ void doStatement() {
     std::string aid = readLine("Account id: ");
     auto acc = findAccount(aid);
     if (!acc) { std::cout << "Account not found.\n"; return; }
-    const auto& all = acc->getAllTransactions();
+
     std::time_t start = acc->getCreatedAt();
     std::time_t end   = std::time(nullptr);
+
+    std::string startS = readLine("Period start YYYY-MM-DD (blank = account open date): ");
+    if (!startS.empty()) {
+        std::time_t ts = parseDate(startS);
+        if (ts != (std::time_t)-1) start = ts;
+        else std::cout << "Invalid date, using account open date.\n";
+    }
+    std::string endS = readLine("Period end YYYY-MM-DD (blank = today): ");
+    if (!endS.empty()) {
+        std::time_t ts = parseDate(endS);
+        if (ts != (std::time_t)-1) end = ts;
+        else std::cout << "Invalid date, using today.\n";
+    }
+
+    const auto& all = acc->getAllTransactions();
+    std::vector<Transaction> inRange;
+    for (const auto& tx : all) {
+        if (tx.getDate() >= start && tx.getDate() <= end)
+            inRange.push_back(tx);
+    }
+
     double opening = acc->getBalance();
     for (const auto& tx : all) {
         switch (tx.getType()) {
@@ -360,7 +381,19 @@ void doStatement() {
                 opening += tx.getAmount(); break;
         }
     }
-    Statement s(acc.get(), start, end, opening, acc->getBalance(), all);
+    double closing = opening;
+    for (const auto& tx : inRange) {
+        switch (tx.getType()) {
+            case TransactionType::DEPOSIT:
+            case TransactionType::TRANSFER_IN:
+                closing += tx.getAmount(); break;
+            case TransactionType::WITHDRAWAL:
+            case TransactionType::TRANSFER_OUT:
+                closing -= tx.getAmount(); break;
+        }
+    }
+
+    Statement s(acc.get(), start, end, opening, closing, inRange);
     s.generate();
 }
 
