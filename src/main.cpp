@@ -87,6 +87,18 @@ double readNonNegativeDouble(const std::string& prompt) {
     }
 }
 
+std::string formatTime(std::time_t t, const char* fmt = "%Y-%m-%d %H:%M:%S") {
+    char buf[32];
+    std::tm tm{};
+#ifdef _WIN32
+    localtime_s(&tm, &t);
+#else
+    localtime_r(&t, &tm);
+#endif
+    std::strftime(buf, sizeof(buf), fmt, &tm);
+    return buf;
+}
+
 std::shared_ptr<Customer> findCustomer(const std::string& id) {
     for (auto& c : g_customers) {
         if (c->getCustomerId() == id) return c;
@@ -234,15 +246,13 @@ void doBalance() {
     auto acc = findAccount(aid);
     if (!acc) { std::cout << "Account not found.\n"; return; }
 
-    char buf[32];
-    std::time_t ct = acc->getCreatedAt();
-    std::strftime(buf, sizeof(buf), "%Y-%m-%d", std::localtime(&ct));
+    std::string openedStr = formatTime(acc->getCreatedAt(), "%Y-%m-%d");
 
     std::cout << "\n--- Account " << acc->getAccountId() << " ---\n"
               << "Type:     " << acc->getType() << "\n"
               << "Status:   " << (acc->isActive() ? "ACTIVE" : "CLOSED") << "\n"
               << "Currency: " << acc->getCurrency() << "\n"
-              << "Opened:   " << buf << "\n"
+              << "Opened:   " << openedStr << "\n"
               << "Owner:    " << acc->getOwner()->getName() << "\n"
               << "Balance:  " << std::fixed << std::setprecision(2)
               << acc->getBalance() << " " << acc->getCurrency() << "\n";
@@ -320,13 +330,10 @@ void doHistory() {
               << "Description\n"
               << std::string(70, '-') << "\n";
     for (const auto& tx : txs) {
-        char buf[32];
-        std::time_t dt = tx.getDate();
-        std::strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", std::localtime(&dt));
         std::cout << std::left << std::setw(10) << tx.getTransactionId()
                   << std::setw(14) << Transaction::typeToString(tx.getType())
                   << std::setw(12) << std::fixed << std::setprecision(2) << tx.getAmount()
-                  << std::setw(22) << buf
+                  << std::setw(22) << formatTime(tx.getDate())
                   << tx.getDescription() << "\n";
     }
     std::cout << "Total: " << txs.size() << " transaction(s).\n";
