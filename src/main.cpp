@@ -527,6 +527,25 @@ void doMonthlyFee() {
               << before << " -> " << chk->getBalance() << "\n";
 }
 
+void doEndOfMonth() {
+    int savReset = 0, chkFees = 0;
+    for (auto& c : g_customers) {
+        for (auto& a : c->getAccounts()) {
+            if (!a->isActive()) continue;
+            if (auto* sav = dynamic_cast<SavingsAccount*>(a.get())) {
+                sav->resetMonthlyCounter();
+                ++savReset;
+            } else if (auto* chk = dynamic_cast<CheckingAccount*>(a.get())) {
+                chk->chargeMonthlyFee();
+                ++chkFees;
+            }
+        }
+    }
+    std::cout << "End-of-month batch complete: "
+              << savReset << " savings counter(s) reset, "
+              << chkFees  << " monthly fee(s) charged.\n";
+}
+
 void doListAllAccounts() {
     bool any = false;
     std::cout << std::left << std::setw(8) << "AcctID"
@@ -604,6 +623,7 @@ void printMenu() {
               << "15) Reset monthly withdrawal counter (savings)\n"
               << "16) Charge monthly fee (checking)\n"
               << "17) Generate statement\n"
+              << "18) End-of-month batch (reset savings counters + charge all fees)\n"
               << " 0) Exit\n"
               << "================================\n";
 }
@@ -638,6 +658,7 @@ int main() {
             case 15: doResetMonthly();    break;
             case 16: doMonthlyFee();      break;
             case 17: doStatement();       break;
+            case 18: doEndOfMonth();      break;
             case 0:
                 std::cout << "Goodbye.\n";
                 return 0;
