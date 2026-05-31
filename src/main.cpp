@@ -27,7 +27,10 @@ int g_nextAccountNum = 1;
 std::string readLine(const std::string& prompt) {
     std::cout << prompt;
     std::string s;
-    std::getline(std::cin, s);
+    if (!std::getline(std::cin, s)) {
+        std::cout << "\nGoodbye.\n";
+        std::exit(0);
+    }
     return s;
 }
 
@@ -43,7 +46,10 @@ int readInt(const std::string& prompt) {
     while (true) {
         std::cout << prompt;
         std::string s;
-        std::getline(std::cin, s);
+        if (!std::getline(std::cin, s)) {
+            std::cout << "\nGoodbye.\n";
+            std::exit(0);
+        }
         std::stringstream ss(s);
         int v;
         if (ss >> v) return v;
@@ -55,7 +61,10 @@ double readDouble(const std::string& prompt) {
     while (true) {
         std::cout << prompt;
         std::string s;
-        std::getline(std::cin, s);
+        if (!std::getline(std::cin, s)) {
+            std::cout << "\nGoodbye.\n";
+            std::exit(0);
+        }
         std::stringstream ss(s);
         double v;
         if (ss >> v) return v;
