@@ -205,6 +205,18 @@ void doBalance() {
     }
 }
 
+static std::time_t parseDate(const std::string& s) {
+    struct tm tm = {};
+    int y = 0, m = 0, d = 0;
+    if (std::sscanf(s.c_str(), "%d-%d-%d", &y, &m, &d) == 3) {
+        tm.tm_year = y - 1900;
+        tm.tm_mon  = m - 1;
+        tm.tm_mday = d;
+        return std::mktime(&tm);
+    }
+    return (std::time_t)-1;
+}
+
 void doHistory() {
     std::string aid = readLine("Account id: ");
     auto acc = findAccount(aid);
@@ -225,14 +237,39 @@ void doHistory() {
     std::string maxS = readLine("Max amount (blank = none): ");
     if (!maxS.empty()) { std::stringstream ss(maxS); double v; if (ss >> v) f.maxAmount = v; }
 
-    auto txs = acc->getTransactionHistory(f);
-    if (txs.empty()) { std::cout << "(no transactions)\n"; return; }
-    for (const auto& tx : txs) {
-        std::cout << "  " << tx.getTransactionId()
-                  << "  " << Transaction::typeToString(tx.getType())
-                  << "  " << std::fixed << std::setprecision(2) << tx.getAmount()
-                  << "  " << tx.getDescription() << "\n";
+    std::string startS = readLine("Start date YYYY-MM-DD (blank = none): ");
+    if (!startS.empty()) {
+        std::time_t ts = parseDate(startS);
+        if (ts != (std::time_t)-1) f.startDate = ts;
+        else std::cout << "Invalid date, ignoring.\n";
     }
+    std::string endS = readLine("End date YYYY-MM-DD (blank = none): ");
+    if (!endS.empty()) {
+        std::time_t ts = parseDate(endS);
+        if (ts != (std::time_t)-1) f.endDate = ts;
+        else std::cout << "Invalid date, ignoring.\n";
+    }
+
+    auto txs = acc->getTransactionHistory(f);
+    if (txs.empty()) { std::cout << "(no transactions match filter)\n"; return; }
+
+    std::cout << std::left << std::setw(10) << "TxID"
+              << std::setw(14) << "Type"
+              << std::setw(12) << "Amount"
+              << std::setw(22) << "Date"
+              << "Description\n"
+              << std::string(70, '-') << "\n";
+    for (const auto& tx : txs) {
+        char buf[32];
+        std::time_t dt = tx.getDate();
+        std::strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", std::localtime(&dt));
+        std::cout << std::left << std::setw(10) << tx.getTransactionId()
+                  << std::setw(14) << Transaction::typeToString(tx.getType())
+                  << std::setw(12) << std::fixed << std::setprecision(2) << tx.getAmount()
+                  << std::setw(22) << buf
+                  << tx.getDescription() << "\n";
+    }
+    std::cout << "Total: " << txs.size() << " transaction(s).\n";
 }
 
 void doInterest() {
