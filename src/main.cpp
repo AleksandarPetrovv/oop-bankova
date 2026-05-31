@@ -232,12 +232,36 @@ void doBalance() {
     std::string aid = readLine("Account id: ");
     auto acc = findAccount(aid);
     if (!acc) { std::cout << "Account not found.\n"; return; }
-    std::cout << "Balance: " << std::fixed << std::setprecision(2)
+
+    char buf[32];
+    std::time_t ct = acc->getCreatedAt();
+    std::strftime(buf, sizeof(buf), "%Y-%m-%d", std::localtime(&ct));
+
+    std::cout << "\n--- Account " << acc->getAccountId() << " ---\n"
+              << "Type:     " << acc->getType() << "\n"
+              << "Status:   " << (acc->isActive() ? "ACTIVE" : "CLOSED") << "\n"
+              << "Currency: " << acc->getCurrency() << "\n"
+              << "Opened:   " << buf << "\n"
+              << "Owner:    " << acc->getOwner()->getName() << "\n"
+              << "Balance:  " << std::fixed << std::setprecision(2)
               << acc->getBalance() << " " << acc->getCurrency() << "\n";
-    if (acc->getType() == "CHECKING") {
+
+    if (acc->getType() == "SAVINGS") {
+        auto* sav = dynamic_cast<SavingsAccount*>(acc.get());
+        if (sav) {
+            std::cout << "Interest rate:        " << sav->getInterestRate() * 100 << "%\n"
+                      << "Monthly withdraw limit: " << sav->getMonthlyWithdrawLimit() << "\n"
+                      << "Withdrawals this month: " << sav->getWithdrawalsThisMonth() << "\n";
+        }
+    } else if (acc->getType() == "CHECKING") {
         auto* chk = dynamic_cast<CheckingAccount*>(acc.get());
-        if (chk) std::cout << "Available (incl. overdraft): " << chk->getAvailableBalance() << "\n";
+        if (chk) {
+            std::cout << "Overdraft limit: " << chk->getOverdraftLimit() << "\n"
+                      << "Monthly fee:     " << chk->getMonthlyFee() << "\n"
+                      << "Available (incl. overdraft): " << chk->getAvailableBalance() << "\n";
+        }
     }
+    std::cout << "Transactions: " << acc->getAllTransactions().size() << "\n";
 }
 
 static std::time_t parseDate(const std::string& s) {
