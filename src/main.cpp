@@ -9,6 +9,7 @@
 #include "TransactionFilter.h"
 #include "Transfer.h"
 
+#include <algorithm>
 #include <iomanip>
 #include <iostream>
 #include <limits>
@@ -277,6 +278,126 @@ void doListCustomers() {
     listAccountsForCustomer(*cust);
 }
 
+void editCustomer() {
+    listCustomers();
+    std::string cid = readLine("Customer id to edit: ");
+    auto cust = findCustomer(cid);
+    if (!cust) { std::cout << "Customer not found.\n"; return; }
+
+    std::cout << "Leave blank to keep current value.\n";
+    std::string name = readLine("Name [" + cust->getName() + "]: ");
+    if (!name.empty()) cust->setName(name);
+    std::string email = readLine("Email [" + cust->getEmail() + "]: ");
+    if (!email.empty()) cust->setEmail(email);
+    std::string phone = readLine("Phone [" + cust->getPhone() + "]: ");
+    if (!phone.empty()) cust->setPhone(phone);
+    std::string addr = readLine("Address [" + cust->getAddress() + "]: ");
+    if (!addr.empty()) cust->setAddress(addr);
+    std::cout << "Customer " << cust->getCustomerId() << " updated.\n";
+}
+
+void deleteCustomer() {
+    listCustomers();
+    std::string cid = readLine("Customer id to delete: ");
+    auto it = std::find_if(g_customers.begin(), g_customers.end(),
+                           [&cid](const std::shared_ptr<Customer>& c) {
+                               return c->getCustomerId() == cid;
+                           });
+    if (it == g_customers.end()) { std::cout << "Customer not found.\n"; return; }
+    if (!(*it)->getAccounts().empty()) {
+        std::cout << "Cannot delete customer with open accounts. Close accounts first.\n";
+        return;
+    }
+    std::string confirm = readLine("Type YES to confirm deletion of " + (*it)->getName() + ": ");
+    if (confirm != "YES") { std::cout << "Cancelled.\n"; return; }
+    g_customers.erase(it);
+    std::cout << "Customer " << cid << " deleted.\n";
+}
+
+void editAccount() {
+    std::string aid = readLine("Account id to edit: ");
+    auto acc = findAccount(aid);
+    if (!acc) { std::cout << "Account not found.\n"; return; }
+    if (!acc->isActive()) { std::cout << "Account is closed.\n"; return; }
+
+    std::cout << "Leave blank to keep current value.\n";
+
+    if (acc->getType() == "SAVINGS") {
+        auto* sav = dynamic_cast<SavingsAccount*>(acc.get());
+        std::string rateS = readLine("Interest rate [" + std::to_string(sav->getInterestRate()) + "]: ");
+        if (!rateS.empty()) {
+            std::stringstream ss(rateS); double v; if (ss >> v && v >= 0) sav->setInterestRate(v);
+        }
+        std::string limS = readLine("Monthly withdrawal limit [" + std::to_string(sav->getMonthlyWithdrawLimit()) + "]: ");
+        if (!limS.empty()) {
+            std::stringstream ss(limS); int v; if (ss >> v && v > 0) sav->setMonthlyWithdrawLimit(v);
+        }
+    } else if (acc->getType() == "CHECKING") {
+        auto* chk = dynamic_cast<CheckingAccount*>(acc.get());
+        std::string odS = readLine("Overdraft limit [" + std::to_string(chk->getOverdraftLimit()) + "]: ");
+        if (!odS.empty()) {
+            std::stringstream ss(odS); double v; if (ss >> v && v >= 0) chk->setOverdraftLimit(v);
+        }
+        std::string feeS = readLine("Monthly fee [" + std::to_string(chk->getMonthlyFee()) + "]: ");
+        if (!feeS.empty()) {
+            std::stringstream ss(feeS); double v; if (ss >> v && v >= 0) chk->setMonthlyFee(v);
+        }
+    }
+    std::cout << "Account " << acc->getAccountId() << " updated.\n";
+}
+
+void closeAccount() {
+    std::string aid = readLine("Account id to close: ");
+    auto acc = findAccount(aid);
+    if (!acc) { std::cout << "Account not found.\n"; return; }
+    if (!acc->isActive()) { std::cout << "Account is already closed.\n"; return; }
+    if (acc->getBalance() != 0.0) {
+        std::cout << "Balance must be zero before closing. Current balance: "
+                  << std::fixed << std::setprecision(2) << acc->getBalance() << "\n";
+        return;
+    }
+    std::string confirm = readLine("Type YES to confirm closing account " + aid + ": ");
+    if (confirm != "YES") { std::cout << "Cancelled.\n"; return; }
+    acc->close();
+    std::cout << "Account " << aid << " closed.\n";
+}
+
+void doMonthlyFee() {
+    std::string aid = readLine("Checking account id: ");
+    auto acc = findAccount(aid);
+    if (!acc) { std::cout << "Account not found.\n"; return; }
+    if (!acc->isActive()) { std::cout << "Account is closed.\n"; return; }
+    auto* chk = dynamic_cast<CheckingAccount*>(acc.get());
+    if (!chk) { std::cout << "Not a checking account.\n"; return; }
+    double before = chk->getBalance();
+    chk->chargeMonthlyFee();
+    std::cout << "Monthly fee charged. " << std::fixed << std::setprecision(2)
+              << before << " -> " << chk->getBalance() << "\n";
+}
+
+void doListAllAccounts() {
+    bool any = false;
+    std::cout << std::left << std::setw(8) << "AcctID"
+              << std::setw(10) << "Type"
+              << std::setw(12) << "Balance"
+              << std::setw(6) << "CCY"
+              << std::setw(8) << "Status"
+              << "Owner\n";
+    std::cout << std::string(60, '-') << "\n";
+    for (auto& c : g_customers) {
+        for (auto& a : c->getAccounts()) {
+            any = true;
+            std::cout << std::left << std::setw(8) << a->getAccountId()
+                      << std::setw(10) << a->getType()
+                      << std::setw(12) << std::fixed << std::setprecision(2) << a->getBalance()
+                      << std::setw(6) << a->getCurrency()
+                      << std::setw(8) << (a->isActive() ? "ACTIVE" : "CLOSED")
+                      << c->getName() << "\n";
+        }
+    }
+    if (!any) std::cout << "(no accounts)\n";
+}
+
 void seedDemoData() {
     auto c = std::make_shared<Customer>("C0001", "Alice Demo", "alice@example.com",
                                         "+1-555-0100", "1 Demo Lane");
@@ -296,15 +417,21 @@ void seedDemoData() {
 void printMenu() {
     std::cout << "\n=========== Bankova ===========\n"
               << " 1) Create customer\n"
-              << " 2) Open account\n"
-              << " 3) Deposit\n"
-              << " 4) Withdraw\n"
-              << " 5) Transfer\n"
-              << " 6) Balance inquiry\n"
-              << " 7) Transaction history (with filter)\n"
-              << " 8) Apply interest (savings)\n"
-              << " 9) Generate statement\n"
-              << "10) List customers / accounts\n"
+              << " 2) Edit customer\n"
+              << " 3) Delete customer\n"
+              << " 4) List customers / accounts\n"
+              << " 5) Open account\n"
+              << " 6) Edit account\n"
+              << " 7) Close account\n"
+              << " 8) List all accounts\n"
+              << " 9) Deposit\n"
+              << "10) Withdraw\n"
+              << "11) Transfer\n"
+              << "12) Balance inquiry\n"
+              << "13) Transaction history (filter by type/amount/date)\n"
+              << "14) Apply interest (savings)\n"
+              << "15) Charge monthly fee (checking)\n"
+              << "16) Generate statement\n"
               << " 0) Exit\n"
               << "================================\n";
 }
@@ -320,16 +447,22 @@ int main() {
         printMenu();
         int choice = readInt("Choose: ");
         switch (choice) {
-            case 1: createCustomer();   break;
-            case 2: openAccount();      break;
-            case 3: doDeposit();        break;
-            case 4: doWithdraw();       break;
-            case 5: doTransfer();       break;
-            case 6: doBalance();        break;
-            case 7: doHistory();        break;
-            case 8: doInterest();       break;
-            case 9: doStatement();      break;
-            case 10: doListCustomers(); break;
+            case 1:  createCustomer();    break;
+            case 2:  editCustomer();      break;
+            case 3:  deleteCustomer();    break;
+            case 4:  doListCustomers();   break;
+            case 5:  openAccount();       break;
+            case 6:  editAccount();       break;
+            case 7:  closeAccount();      break;
+            case 8:  doListAllAccounts(); break;
+            case 9:  doDeposit();         break;
+            case 10: doWithdraw();        break;
+            case 11: doTransfer();        break;
+            case 12: doBalance();         break;
+            case 13: doHistory();         break;
+            case 14: doInterest();        break;
+            case 15: doMonthlyFee();      break;
+            case 16: doStatement();       break;
             case 0:
                 std::cout << "Goodbye.\n";
                 return 0;
