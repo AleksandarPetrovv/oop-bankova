@@ -564,8 +564,18 @@ void seedDemoData() {
     c->addAccount(s);
     c->addAccount(k);
     g_customers.push_back(c);
-    g_nextCustomerNum = 2;
-    g_nextAccountNum = 3;
+
+    // Second demo customer for cross-customer transfer testing
+    auto c2 = std::make_shared<Customer>("C0002", "Bob Demo", "bob@example.com",
+                                         "+1-555-0200", "2 Demo Street");
+    auto k2 = std::make_shared<CheckingAccount>("A0003", "USD", c2.get(), 250.0, 100.0, 5.0);
+    k2->addObserver(std::make_shared<EmailNotifier>(c2->getEmail()));
+    k2->addObserver(std::make_shared<SmsNotifier>(c2->getPhone()));
+    c2->addAccount(k2);
+    g_customers.push_back(c2);
+
+    g_nextCustomerNum = 3;
+    g_nextAccountNum = 4;
 }
 
 void printMenu() {
@@ -595,8 +605,10 @@ void printMenu() {
 
 int main() {
     seedDemoData();
-    std::cout << "Welcome to Bankova. A demo customer C0001 with accounts A0001 (savings) "
-                 "and A0002 (checking) has been pre-loaded.\n";
+    std::cout << "Welcome to Bankova.\n"
+                 "  C0001 Alice Demo  A0001 savings USD  A0002 checking USD\n"
+                 "  C0002 Bob Demo    A0003 checking USD\n"
+                 "Use option 4 to browse customers, 13 to view transaction history.\n";
 
     while (true) {
         printMenu();
