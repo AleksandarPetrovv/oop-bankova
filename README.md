@@ -1,4 +1,4 @@
-# Bankova — OOP Banking System (C++17)
+# OOP Banking System (C++17)
 
 A console-based banking system demonstrating OOP principles including inheritance, polymorphism, and the Observer design pattern.
 

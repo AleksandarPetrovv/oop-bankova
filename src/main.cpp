@@ -614,7 +614,7 @@ void seedDemoData() {
 }
 
 void printMenu() {
-    std::cout << "\n=========== Bankova ===========\n"
+    std::cout << "\n====== OOP Banking System ======\n"
               << " 1) Create customer\n"
               << " 2) Edit customer\n"
               << " 3) Delete customer\n"
@@ -641,7 +641,8 @@ void printMenu() {
 
 int main() {
     seedDemoData();
-    std::cout << "Welcome to Bankova.\n"
+    std::cout << "OOP Banking System\n"
+                 "Pre-loaded demo data:\n"
                  "  C0001 Alice Demo  A0001 savings USD  A0002 checking USD\n"
                  "  C0002 Bob Demo    A0003 checking USD\n"
                  "Use option 4 to browse customers, 13 to view transaction history.\n";
